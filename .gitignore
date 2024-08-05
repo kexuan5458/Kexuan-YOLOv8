@@ -1,0 +1,10 @@
+cfg/
+datasets/
+JSON/
+__pycache__/
+runs/
+yolov8n.pt
+yolov8n-obb.pt
+yolov8s.pt
+yolov8s-obb.pt
+

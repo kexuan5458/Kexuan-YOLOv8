@@ -1,0 +1,14 @@
+names:
+- car
+- van
+- bus
+- truck
+- motorbike
+- bicycle
+- pedestrian
+- group_of_pedestrians
+nc: 8
+test: /data/radiate_origin_classification/test/images
+train: /data/radiate_origin_classification/train_good_and_bad_weather/images
+val: False
+

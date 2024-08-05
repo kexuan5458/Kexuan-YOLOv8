@@ -1,0 +1,13 @@
+names:
+- car
+- van
+- bus
+- truck
+- motorbike
+- bicycle
+- pedestrian
+- group_of_pedestrians
+nc: 8
+test: /data/v8OBB/test/images
+train: /data/v8OBB/train/images
+val: /data/v8OBB/val/images
