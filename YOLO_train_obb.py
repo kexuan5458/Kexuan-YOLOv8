@@ -30,7 +30,7 @@ data = {'train' :  '/data/v8OBB/test/images',
 #     hamster_yaml = yaml.safe_load(f)
 
 #　original image size: 1152 * 1152
-model.train(data='/home/ee904/Repo/yolov8/Radiate_train_n_2.yaml', imgsz=1152, epochs=60, batch=8, name='yolov8s-obb_60e')
+model.train(data='/home/ee904/Repo/yolov8/Radiate_train_s_2.yaml', imgsz=1152, epochs=60, batch=8, name='yolov8s-obb_60e')
 ##### Training.
 # results = model.train(
 #    data='pothole_v8.yaml',

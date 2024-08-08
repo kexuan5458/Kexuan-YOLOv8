@@ -12,9 +12,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # gt_file = '/home/ee904/Repo/My_CenterNet/radiate_sdk/gt_junction_1_12.json'
-    # pred_file = '/home/ee904/Repo/My_CenterNet/radiate_sdk/competition_pred_faster_rcnn_24999.json'
     gt_file = '/data/v8_crop/test/GT_annotations.json'
+    # gt_file = '/data/v8/test/GT_annotations.json'
     pred_file = '/home/ee904/Repo/yolov8/runs/detect/yolov8s_100e_crop2/yolov8s_100e_crop2.json'
     gt = []
     predictions = []

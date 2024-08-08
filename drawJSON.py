@@ -4,6 +4,7 @@ import numpy as np
 from collections import defaultdict
 from shapely.geometry import Polygon
 import json
+import os
 
 def group_by_key(detections, key):
     groups = defaultdict(list)
@@ -11,10 +12,11 @@ def group_by_key(detections, key):
         groups[detection[key]].append(detection)
     return groups
 
-gt_file = '/data/v8/test/GT_annotations.json'
-# pred_file = '/home/ee904/Repo/yolov8/runs/detect/yolov8s_50e2/yolov8s_50e2.json'
+gt_file = '/data/v8OBB/test/GT_annotations.json'
+# pred_file = '/home/ee904/Repo/yolov8/runs/detect/yolov8s_100e_crop2/bounding_boxes_data_converted.json'
 # gt_file = '/home/ee904/Repo/yolov8/RADIATE_Test.json'
 pred_file = '/home/ee904/Repo/yolov8/runs/obb/yolov8s-obb_60e/yolov8s-obb_60e.json'
+path_to_demo_folder = '/home/ee904/Repo/yolov8/runs/obb/yolov8s-obb_60e/test_result/'
 gt = []
 predictions = []
 
@@ -39,9 +41,9 @@ colors = {'car': (255, 0, 255),         # pink
 # Iterate through each sample_token
 sample_token_count = 0
 for sample_token in grouped_gt:
-    # print("sample_token_count = ", sample_token_count)
     # Create a blank image (or load the actual image corresponding to the sample_token)
-    image = cv2.imread(f"/data/v8/test/images/" + sample_token, 1)
+    # image = cv2.imread(f"/data/v8/test/images/" + sample_token, 1)
+    image = cv2.imread(f"/data/v8OBB/test/images/" + sample_token, 1)
 
     canvas = np.zeros((1152, 1152, 3), dtype=np.uint8)  # Change dimensions as needed
     image_copy = canvas.copy()
@@ -58,13 +60,14 @@ for sample_token in grouped_gt:
         else:
             # cv2.polylines(image, [points], isClosed=True, color=colors[box['name']], thickness=2)
             cv2.polylines(image, [points], isClosed=True, color=(0, 255, 0), thickness=2)   # pred bbox+image (green)
-
-
+    
+    
 
 
 
     # Draw ground truth boxes in white and purple
     for box in grouped_gt.get(sample_token, []):
+        
         points = np.array(box["points"], dtype=np.int32)
         if (box['name'] == 'car') or (box['name'] == 'van') or (box['name'] == 'bus') or (box['name'] == 'truck'):
             cv2.fillPoly(image_copy, [points], color=(0, 0, 255))      # red
@@ -76,7 +79,9 @@ for sample_token in grouped_gt:
     image = cv2.addWeighted(image_copy, 0.4, image, 0.8, 0)
     # Display the image
     cv2.imshow(f'Image', image)
-    cv2.imwrite(f'/home/ee904/Repo/yolov8/runs/detect/yolov8s_50e2/drawJSON/{sample_token}', image)
-    key = cv2.waitKey(500)
+    if not os.path.exists(path_to_demo_folder): 
+        os.makedirs(path_to_demo_folder) 
+    cv2.imwrite(f'{path_to_demo_folder}{sample_token}', image)
+    key = cv2.waitKey(100)
     if key == ord('q'):
         break

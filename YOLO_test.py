@@ -1,59 +1,74 @@
+import os
 import json
 from ultralytics import YOLO
-import cv2
-import os
+'''
+Author by JiaWen Liao
+Given an image folder, an output json file path, and a model weight
+Output: A json file to specified path.
+This Json file can be visualized by "drawJSON.py"
+'''
 
-root_dir = './runs/detect/yolov8s_100e_crop2'
-input_weight_file = root_dir + '/weights/best.pt'
-# Load the YOLOv8 model
-model = YOLO(input_weight_file)
+# Category ID to name mapping (replace with your actual category names)
+CATEGORY_ID_TO_NAME = {
+    0: "car",
+    1: "van",
+    2: "bus",
+    3: "truck",
+    4: "motorbike",
+    5: "bicycle",
+    6: "pedestrian",
+    7: "group_of_pedestrians",
+    # Add other category mappings here
+}
 
-# Path to the folder containing images
-folder_path = '/data/v8_crop/test/images'
+def sort_key(path):
+    filename = os.path.basename(path)
+    x_value = int(filename.split(".")[0])
+    return x_value
 
-# Dictionary to store bounding box information for each image
-bounding_boxes_data = {}
+def generateJSON(Image_folder, Output_file_path, weight_path):
+    model = YOLO(weight_path)
+    predictions = []
+    Image_file_list = os.listdir(Image_folder)
+    img_path = sorted(Image_file_list, key=sort_key)
 
-# Iterate through each image in the folder
-for filename in os.listdir(folder_path):
-    if filename.endswith(('.jpg', '.jpeg', '.png')):  # Filter image files
-        # Read the image
-        img_path = os.path.join(folder_path, filename)
-        img = cv2.imread(img_path)
+    for filename in img_path:
+        print(filename)
+        if filename.endswith(('.jpg', '.jpeg', '.png')):
+            file_path = os.path.join(Image_folder, filename)
+            # sample_token = os.path.splitext(filename)[0]
+            sample_token = filename.split('.')[0]
+            results = model(file_path, verbose = False)
+            
+            for i in range(len(results[0].boxes.xyxy)): # box coordinates in (left_top_x, left_top_y, width, height) format
+                # print((results[0].boxes))
+                
+                x_min, y_min, x_max, y_max = results[0].boxes.xyxy[i].cpu()
+                x_min, y_min, x_max, y_max = float(x_min), float(y_min), float(x_max), float(y_max)
+                score = float(results[0].boxes.conf[i].cpu())
+                coor = [[x_min, y_max],
+                        [x_min, y_min],
+                        [x_max, y_min],
+                        [x_max, y_max]]
+                cls = int((results[0].boxes.cls[i].cpu()))
+                # print(cls)
+                predicts_object = {'sample_token': f'{sample_token}.png', 
+                                   'points': coor, 
+                                   'name': CATEGORY_ID_TO_NAME.get(cls, "unknown"), 
+                                   'scores': score}
+                predictions.append(predicts_object)
+    with open(Output_file_path, "w") as outfile:
+        json.dump(predictions, outfile, indent=2)
 
-        # Perform object detection on the image
-        results = model.predict(img)
+if __name__ == "__main__":
+    '''
+    # Here, the images' name are timestamp. 
+    Because I use the '/data/Radiate_Test/images' to run "drawJSON.py". 
+    All of the images' name are timestamp.
+    '''
+    # Image_folder = '/data/v8/test/images' # Path to Image folder
+    Image_folder = '/data/v8_crop/test/images'
 
-        # List to store bounding box information for the current image
-        image_boxes = []
-
-        # Process detection results
-        for r in results:
-            boxes = r.boxes
-            for box in boxes:
-                b = box.xywh[0]  # get box coordinates in (left_top_x, left_top_y, width, height) format, 
-                # box.xywh : tensor([[545.8571, 933.0884,  20.8210,  24.2227]], device='cuda:0')
-                # box.xywh[0] : tensor([545.8571, 933.0884,  20.8210,  24.2227], device='cuda:0')
-                c = box.cls
-                r = box.conf
-                class_label = model.names[int(c)]
-                box_coordinates = [float(coord) for coord in b]
-                # print(box_coordinates)  # [545, 933, 20, 24]
-                # print(type(box_coordinates)) # <class 'list'>
-
-                # Append bounding box information to the list
-                image_boxes.append({
-                    'class': class_label,
-                    'box_coordinates': [float(coord) for coord in b],
-                    'confidence': float(r)
-                })
-
-        # Save bounding box information for the current image in the dictionary
-        bounding_boxes_data[filename] = image_boxes
-
-# Save the bounding box information to a JSON file
-output_json_file = root_dir + '/bounding_boxes_data.json'
-with open(output_json_file, 'w') as f:
-    json.dump(bounding_boxes_data, f, indent=4)
-
-print(f"Bounding box information saved to {output_json_file}")
+    Output_file_path = './runs/detect/yolov8s_100e_crop2/yolov8s_100e_crop2.json' # Path to json file
+    weight_path =  './runs/detect/yolov8s_100e_crop2/weights/best.pt' # Yolo weight path
+    generateJSON(Image_folder, Output_file_path, weight_path)
